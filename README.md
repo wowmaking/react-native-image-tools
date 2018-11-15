@@ -25,7 +25,7 @@
 
 1. Open up `android/app/src/main/java/[...]/MainActivity.java`
 
-- Add `import com.wowmaking.RNImageToolsPackage;` to the imports at the top of the file
+- Add `import net.wowmaking.RNImageToolsPackage;` to the imports at the top of the file
 - Add `new RNImageToolsPackage()` to the list returned by the `getPackages()` method
 
 2. Append the following lines to `android/settings.gradle`:
@@ -49,10 +49,10 @@ See examples in the API section.
 #### Platform support warning
 Not implemented on Android yet.
 #### Parameter(s)
-* **image:** path to image
-* **maskImage:** path to mask image
+* **image:** String - path to image
+* **maskImage:** String - path to mask image
 #### Returns Promise of
-* **product:** 
+* **maskedImage:** Object 
     * **path:** String
     * **width:** Number
     * **height:** Number
