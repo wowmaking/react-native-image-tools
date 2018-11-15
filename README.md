@@ -1,24 +1,24 @@
-# react-native-image-tools
+# react-native-image-tools-wm
 
 ## Getting started
 
-`$ npm install react-native-image-tools --save`
+`$ npm install react-native-image-tools-wm --save`
 
 ### Mostly automatic installation
 
-`$ react-native link react-native-image-tools`
+`$ react-native link react-native-image-tools-wm`
 
 ### Manual installation
 
 #### iOS
 
 1. In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
-2. Go to `node_modules` ➜ `react-native-image-tools` and add `RNImageTools.xcodeproj`
+2. Go to `node_modules` ➜ `react-native-image-tools-wm` and add `RNImageTools.xcodeproj`
 3. In XCode, in the project navigator, select your project. Add `libRNImageTools.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
 4. Run your project (`Cmd+R`)
 
 #### iOS CocoaPods
-1. Add `pod 'RNImageTools', :path => '../node_modules/react-native-image-tools'` to your `ios/Podfile`
+1. Add `pod 'RNImageTools', :path => '../node_modules/react-native-image-tools-wm'` to your `ios/Podfile`
 2. Run `pod install` while in `ios` directory
 
 #### Android
@@ -30,17 +30,17 @@
 
 2. Append the following lines to `android/settings.gradle`:
    ```
-   include ':react-native-image-tools'
-   project(':react-native-image-tools').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-image-tools/android')
+   include ':react-native-image-tools-wm'
+   project(':react-native-image-tools-wm').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-image-tools-wm/android')
    ```
 3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
    ```
-     compile project(':react-native-image-tools')
+     compile project(':react-native-image-tools-wm')
    ```
 ## Usage
 
 ```javascript
-import RNImageTools from 'react-native-image-tools';
+import RNImageTools from 'react-native-image-tools-wm';
 ```
 See examples in the API section.
 
