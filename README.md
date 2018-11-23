@@ -4,7 +4,7 @@
 
 `$ npm install react-native-image-tools-wm --save`
 
-### Mostly automatic installation
+### Automatic installation
 
 `$ react-native link react-native-image-tools-wm`
 
@@ -23,7 +23,7 @@
 
 #### Android
 
-1. Open up `android/app/src/main/java/[...]/MainActivity.java`
+1. Open up `android/app/src/main/java/[...]/MainApplication.java`
 
 - Add `import net.wowmaking.RNImageToolsPackage;` to the imports at the top of the file
 - Add `new RNImageToolsPackage()` to the list returned by the `getPackages()` method
@@ -53,12 +53,35 @@ Not implemented on Android yet.
 * **maskImage:** String - path to mask image
 #### Returns Promise of
 * **maskedImage:** Object 
-    * **path:** String
+    * **uri:** String
     * **width:** Number
     * **height:** Number
 ```javascript
 RNImageTools.mask(image, maskImage)
-  .then(({ path, width, height }) => {
+  .then(({ uri, width, height }) => {
+      // Sync with your app state
+  })
+  .catch(console.error);
+```
+
+
+### transform(image, translateX, translateY, scale, rotate)
+#### Platform support warning
+Not implemented on Android yet.
+#### Parameter(s)
+* **image:** String - path to image
+* **translateX:** Number
+* **translateY:** Number
+* **scale:** Number
+* **rotate:** Number - in degrees
+#### Returns Promise of
+* **transformedImage:** Object 
+    * **uri:** String
+    * **width:** Number
+    * **height:** Number
+```javascript
+RNImageTools.transform(image, 10, -10, 1.25, 45)
+  .then(({ uri, width, height }) => {
       // Sync with your app state
   })
   .catch(console.error);
