@@ -86,3 +86,47 @@ RNImageTools.transform(image, 10, -10, 1.25, 45)
   })
   .catch(console.error);
 ```
+
+
+### resize(image, width, height)
+#### Platform support warning
+Not implemented on Android yet.
+#### Parameter(s)
+* **image:** String - path to image
+* **width:** Number
+* **height:** Number - in degrees
+#### Returns Promise of
+* **resizedImage:** Object 
+    * **uri:** String
+    * **width:** Number
+    * **height:** Number
+```javascript
+RNImageTools.resize(image, 500, 500)
+  .then(({ uri, width, height }) => {
+      // Sync with your app state
+  })
+  .catch(console.error);
+```
+
+
+### crop(image, x, y, width, height)
+#### Platform support warning
+Not implemented on Android yet.
+#### Parameter(s)
+* **image:** String - path to image
+* **x:** Number - top offset
+* **y:** Number - left offset
+* **width:** Number
+* **height:** Number
+#### Returns Promise of
+* **croppedImage:** Object 
+    * **uri:** String
+    * **width:** Number
+    * **height:** Number
+```javascript
+RNImageTools.crop(image, 100, 100, 500, 500)
+  .then(({ uri, width, height }) => {
+      // Sync with your app state
+  })
+  .catch(console.error);
+```
