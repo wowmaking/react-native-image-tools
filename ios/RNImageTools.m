@@ -29,12 +29,34 @@ RCT_EXPORT_METHOD(transform:(NSString *)imageURLString
     
     UIImage *resultImage = noTransparencyImage;
     
-    NSString *imagePath = [self saveImage:resultImage];
+    NSString *imagePath = [self saveImage:resultImage withPostfix:@"transformed"];
     
     resolve(@{
               @"uri": imagePath,
               @"width": [NSNumber numberWithFloat:resultImage.size.width],
               @"height": [NSNumber numberWithFloat:resultImage.size.height]
+              });
+}
+
+RCT_EXPORT_METHOD(crop:(NSString *)imageURLString
+                  x:(CGFloat)x
+                  y:(CGFloat)y
+                  width:(CGFloat)width
+                  height:(CGFloat)height
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejector:(RCTPromiseRejectBlock)reject)
+{
+    NSURL *imageURL = [RCTConvert NSURL:imageURLString];
+    NSData *imageData = [[NSData alloc] initWithContentsOfURL:imageURL];
+    UIImage *image = [self fixImageOrientation:[[UIImage alloc] initWithData:imageData]];
+    UIImage *croppedImage = [self cropImage:image toRect:CGRectMake(x, y, width, height)];
+    
+    NSString *imagePath = [self saveImage:croppedImage withPostfix:@"cropped"];
+    
+    resolve(@{
+              @"uri": imagePath,
+              @"width": [NSNumber numberWithFloat:croppedImage.size.width],
+              @"height": [NSNumber numberWithFloat:croppedImage.size.height]
               });
 }
 
@@ -63,13 +85,42 @@ RCT_EXPORT_METHOD(mask:(NSString *)imageURLString
     UIImage *maskedImageFromLayer = [self imageFromLayer:maskedImageView.layer];
     UIImage *trimmedImage = [self trimTransparentPixels:maskedImageFromLayer requiringFullOpacity:NO];
     
-    NSString *imagePath = [self saveImage:trimmedImage];
+    NSString *imagePath = [self saveImage:trimmedImage withPostfix:@"masked"];
     
     resolve(@{
               @"uri": imagePath,
               @"width": [NSNumber numberWithFloat:maskedImage.size.width],
               @"height": [NSNumber numberWithFloat:maskedImage.size.height]
               });
+}
+
+RCT_EXPORT_METHOD(resize:(NSString *)imageURLString
+                  toWidth:(CGFloat)width
+                  toHeight:(CGFloat)height
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejector:(RCTPromiseRejectBlock)reject)
+{
+    NSURL *imageURL = [RCTConvert NSURL:imageURLString];
+    NSData *imageData = [[NSData alloc] initWithContentsOfURL:imageURL];
+    UIImage *image = [self fixImageOrientation:[[UIImage alloc] initWithData:imageData]];
+    
+    image = [self resizeImage:image toWidth:width toHeight:height];
+    
+    NSString *imagePath = [self saveImage:image withPostfix:@"resized"];
+    
+    resolve(@{
+              @"uri": imagePath,
+              @"width": [NSNumber numberWithFloat:image.size.width],
+              @"height": [NSNumber numberWithFloat:image.size.height]
+              });
+}
+
+RCT_EXPORT_METHOD(delete:(NSString *)imageURLString
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejector:(RCTPromiseRejectBlock)reject)
+{
+    [self deleteImageAtPath:imageURLString];
+    resolve(nil);
 }
 
 - (UIImage*) maskImage:(UIImage *) image withMask:(UIImage *) mask
@@ -96,13 +147,24 @@ RCT_EXPORT_METHOD(mask:(NSString *)imageURLString
     return maskedImage;
 }
 
-- (NSString *)saveImage:(UIImage *)image {
+- (NSString *)saveImage:(UIImage *)image withPostfix:(NSString *)postfix {
     NSString *fileName = [[NSProcessInfo processInfo] globallyUniqueString];
-    NSString *fullPath = [NSString stringWithFormat:@"%@/%@.png", [self getPathForDirectory:NSDocumentDirectory], fileName];
+    NSString *fullPath = [NSString stringWithFormat:@"%@/%@_%@.png", [self getPathForDirectory:NSDocumentDirectory], fileName, postfix];
     NSData *imageData = UIImagePNGRepresentation(image);
     [imageData writeToFile:fullPath atomically:YES];
     return fullPath;
 }
+
+- (void)deleteImageAtPath:(NSString *)path {
+    NSError *error;
+    if ([[NSFileManager defaultManager] isDeletableFileAtPath:path]) {
+        BOOL success = [[NSFileManager defaultManager] removeItemAtPath:path error:&error];
+        if (!success) {
+            NSLog(@"Error removing file at path: %@", error.localizedDescription);
+        }
+    }
+}
+
 
 - (NSString *)getPathForDirectory:(int)directory
 {
@@ -253,6 +315,34 @@ RCT_EXPORT_METHOD(mask:(NSString *)imageURLString
     CGImageRelease(imageRef);
     
     return cropped;
+}
+
+- (UIImage*) resizeImage:(UIImage *)image toWidth:(CGFloat)width toHeight:(CGFloat)height
+{
+    CGContextRef ctx = CGBitmapContextCreate(nil, width, height, CGImageGetBitsPerComponent(image.CGImage), 0, CGImageGetColorSpace(image.CGImage), kCGImageAlphaPremultipliedLast);
+    
+    CGFloat rectWidth;
+    CGFloat rectHeight;
+    CGFloat rectX;
+    CGFloat rectY;
+    
+    if (image.size.width > image.size.height) {
+        rectWidth = width;
+        rectHeight = image.size.height * width / image.size.width;
+        rectX = 0;
+        rectY = height / 2 - rectHeight / 2;
+    } else {
+        rectWidth = image.size.width * height / image.size.height;
+        rectHeight = height;
+        rectX = width / 2 - rectWidth / 2;
+        rectY = 0;
+    }
+    CGContextDrawImage(ctx, CGRectMake(rectX, rectY, rectWidth, rectHeight), image.CGImage);
+
+    CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
+    CGContextRelease(ctx);
+    
+    return [UIImage imageWithCGImage:cgImage];
 }
 
 - (UIImage *) trimTransparentPixels:(UIImage *)image requiringFullOpacity:(BOOL)fullyOpaque
