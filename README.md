@@ -57,11 +57,11 @@ Not implemented on Android yet.
     * **width:** Number
     * **height:** Number
 ```javascript
-RNImageTools.mask(image, maskImage)
-  .then(({ uri, width, height }) => {
-      // Sync with your app state
-  })
-  .catch(console.error);
+RNImageTools.mask(image, maskImage, {
+  trimTransparency: true
+}).then(({ uri, width, height }) => {
+    // Sync with your app state
+}).catch(console.error);
 ```
 
 
@@ -129,4 +129,39 @@ RNImageTools.crop(image, 100, 100, 500, 500)
       // Sync with your app state
   })
   .catch(console.error);
+```
+
+
+### createMaskFropShape(options)
+Creates a bitmap with white background and draws a black shape from provided points. It's intended usage is to generate mask images on the fly.
+#### Platform support warning
+Not implemented on Android yet.
+#### Parameter(s)
+* **options:** Object 
+    * **points:** Array of points
+        * **point:** Object 
+            * **x:** Number
+            * **y:** Number
+    * **width:** Number
+    * **height:** Number
+    * **inverted:** Boolean
+#### Returns Promise of
+* **maskImage:** Object 
+    * **uri:** String
+    * **width:** Number
+    * **height:** Number
+```javascript
+RNImageTools.createMaskFropShape({
+  points: [
+    { x: 20, y: 20 },
+    { x: 200, y: 200 },
+    { x: 200, y: 20 },
+    { x: 20, y: 20 },
+  ],
+  width: 500,
+  height: 500,
+  inverted: false,
+}).then(({ uri, width, height }) => {
+  // Sync with your app state
+}).catch(console.error);
 ```

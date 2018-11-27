@@ -19,9 +19,7 @@ RCT_EXPORT_METHOD(transform:(NSString *)imageURLString
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejector:(RCTPromiseRejectBlock)reject)
 {
-    NSURL *imageURL = [RCTConvert NSURL:imageURLString];
-    NSData *imageData = [[NSData alloc] initWithContentsOfURL:imageURL];
-    UIImage *image = [self fixImageOrientation:[[UIImage alloc] initWithData:imageData]];
+    UIImage *image = [self getUIImageFromURLString:imageURLString];
     UIImage *translatedImage = [self translateImage:image byX:translateX byY:translateY];
     UIImage *scaledImage = [self scaleImage:translatedImage sx:scale sy:scale];
     UIImage *rotatedImage = [self rotateImage:scaledImage byDegree:rotate];
@@ -62,15 +60,13 @@ RCT_EXPORT_METHOD(crop:(NSString *)imageURLString
 
 RCT_EXPORT_METHOD(mask:(NSString *)imageURLString
                   maskImageURLString:(NSString *)maskImageURLString
+                  options:(NSDictionary *)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejector:(RCTPromiseRejectBlock)reject)
 {
-    NSURL *imageURL = [RCTConvert NSURL:imageURLString];
-    NSURL *maskImageURL = [RCTConvert NSURL:maskImageURLString];
-    NSData *imageData = [[NSData alloc] initWithContentsOfURL:imageURL];
-    NSData *maskImageData = [[NSData alloc] initWithContentsOfURL:maskImageURL];
-    UIImage *image = [self fixImageOrientation:[[UIImage alloc] initWithData:imageData]];
-    UIImage *maskImage = [[UIImage alloc] initWithData:maskImageData];
+    UIImage *image = [self getUIImageFromURLString:imageURLString];
+    UIImage *maskImage = [self getUIImageFromURLString:maskImageURLString];
+    BOOL trimTransparency = [RCTConvert BOOL:options[@"trimTransparency"]];
     
     // Crop
     CGFloat newWidth = maskImage.size.width * image.size.height / maskImage.size.height;
@@ -83,9 +79,9 @@ RCT_EXPORT_METHOD(mask:(NSString *)imageURLString
     UIImageView *maskedImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, maskedImage.size.width, maskedImage.size.height)];
     maskedImageView.image = maskedImage;
     UIImage *maskedImageFromLayer = [self imageFromLayer:maskedImageView.layer];
-    UIImage *trimmedImage = [self trimTransparentPixels:maskedImageFromLayer requiringFullOpacity:NO];
     
-    NSString *imagePath = [self saveImage:trimmedImage withPostfix:@"masked"];
+    UIImage *resultImage = trimTransparency ? [self trimTransparentPixels:maskedImageFromLayer requiringFullOpacity:NO] : maskedImageFromLayer;
+    NSString *imagePath = [self saveImage:resultImage withPostfix:@"masked"];
     
     resolve(@{
               @"uri": imagePath,
@@ -100,9 +96,7 @@ RCT_EXPORT_METHOD(resize:(NSString *)imageURLString
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejector:(RCTPromiseRejectBlock)reject)
 {
-    NSURL *imageURL = [RCTConvert NSURL:imageURLString];
-    NSData *imageData = [[NSData alloc] initWithContentsOfURL:imageURL];
-    UIImage *image = [self fixImageOrientation:[[UIImage alloc] initWithData:imageData]];
+    UIImage *image = [self getUIImageFromURLString:imageURLString];
     
     image = [self resizeImage:image toWidth:width toHeight:height];
     
@@ -121,6 +115,39 @@ RCT_EXPORT_METHOD(delete:(NSString *)imageURLString
 {
     [self deleteImageAtPath:imageURLString];
     resolve(nil);
+}
+
+RCT_EXPORT_METHOD(createMaskFropShape:(NSDictionary*)options
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejector:(RCTPromiseRejectBlock)reject)
+{
+    CGFloat width = [RCTConvert CGFloat:options[@"width"]];
+    CGFloat height = [RCTConvert CGFloat:options[@"height"]];
+    NSArray *points = [RCTConvert NSArray:options[@"points"]];
+    BOOL inverted = [RCTConvert BOOL:options[@"inverted"]];
+    
+    NSMutableArray *pointsWithCGPoints = [[NSMutableArray alloc] init];
+    for (NSInteger i = 0; i < [points count]; i++) {
+        CGPoint convertedCGPoint = [RCTConvert CGPoint:[points objectAtIndex:i]];
+        [pointsWithCGPoints addObject:[NSValue valueWithCGPoint:convertedCGPoint]];
+    }
+    
+    UIImage *image = [self createMaskImageFropShape:pointsWithCGPoints withWidth:width height:height invert:inverted];
+    
+    NSString *imagePath = [self saveImage:image withPostfix:@"shape"];
+    
+    resolve(@{
+              @"uri": imagePath,
+              @"width": [NSNumber numberWithFloat:image.size.width],
+              @"height": [NSNumber numberWithFloat:image.size.height]
+              });
+}
+
+- (UIImage*) getUIImageFromURLString:(NSString *)imageURLString {
+    NSURL *imageURL = [RCTConvert NSURL:imageURLString];
+    NSData *imageData = [[NSData alloc] initWithContentsOfURL:imageURL];
+    UIImage *image = [self fixImageOrientation:[[UIImage alloc] initWithData:imageData]];
+    return image;
 }
 
 - (UIImage*) maskImage:(UIImage *) image withMask:(UIImage *) mask
@@ -339,6 +366,33 @@ RCT_EXPORT_METHOD(delete:(NSString *)imageURLString
     }
     CGContextDrawImage(ctx, CGRectMake(rectX, rectY, rectWidth, rectHeight), image.CGImage);
 
+    CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
+    CGContextRelease(ctx);
+    
+    return [UIImage imageWithCGImage:cgImage];
+}
+
+- (UIImage*) createMaskImageFropShape:(NSArray*)points withWidth:(CGFloat)width height:(CGFloat)height invert:(BOOL)inverted
+{
+    CGContextRef ctx = CGBitmapContextCreate(nil, width, height, 8, 0, CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB), kCGImageAlphaPremultipliedLast);
+    
+    NSInteger count = [points count];
+    CGPoint cPoints[count];
+    
+    for (int i = 0; i < count; i++) {
+        cPoints[i] = [[points objectAtIndex:i] CGPointValue];
+    }
+    
+    CGColorRef rectCGColor = inverted ? [UIColor whiteColor].CGColor : [UIColor blackColor].CGColor;
+    CGColorRef shapeCGColor = inverted ? [UIColor blackColor].CGColor : [UIColor whiteColor].CGColor;
+    
+    CGContextSetFillColorWithColor(ctx, rectCGColor);
+    CGContextFillRect(ctx, CGRectMake(0, 0, width, height));
+    
+    CGContextSetFillColorWithColor(ctx, shapeCGColor);
+    CGContextAddLines(ctx, cPoints, count);
+    CGContextFillPath(ctx);
+    
     CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
     CGContextRelease(ctx);
     
