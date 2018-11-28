@@ -134,7 +134,7 @@ RNImageTools.crop(image, 100, 100, 500, 500)
 ```
 
 
-### createMaskFropShape(options)
+### createMaskFromShape(options)
 Creates a bitmap with white background and draws a black shape from provided points. It's intended usage is to generate mask images on the fly.
 #### Platform support warning
 Not implemented on Android yet.
@@ -153,7 +153,7 @@ Not implemented on Android yet.
     * **width:** Number
     * **height:** Number
 ```javascript
-RNImageTools.createMaskFropShape({
+RNImageTools.createMaskFromShape({
   points: [
     { x: 20, y: 20 },
     { x: 200, y: 200 },

@@ -141,7 +141,7 @@ RCT_EXPORT_METHOD(delete:(NSString *)imageURLString
     resolve(nil);
 }
 
-RCT_EXPORT_METHOD(createMaskFropShape:(NSDictionary*)options
+RCT_EXPORT_METHOD(createMaskFromShape:(NSDictionary*)options
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejector:(RCTPromiseRejectBlock)reject)
 {
@@ -156,7 +156,7 @@ RCT_EXPORT_METHOD(createMaskFropShape:(NSDictionary*)options
         [pointsWithCGPoints addObject:[NSValue valueWithCGPoint:convertedCGPoint]];
     }
     
-    UIImage *image = [self createMaskImageFropShape:pointsWithCGPoints withWidth:width height:height invert:inverted];
+    UIImage *image = [self createMaskImageFromShape:pointsWithCGPoints withWidth:width height:height invert:inverted];
     
     NSString *imagePath = [self saveImage:image withPostfix:@"shape"];
     
@@ -414,7 +414,7 @@ RCT_EXPORT_METHOD(createMaskFropShape:(NSDictionary*)options
     return [UIImage imageWithCGImage:cgImage];
 }
 
-- (UIImage*) createMaskImageFropShape:(NSArray*)points withWidth:(CGFloat)width height:(CGFloat)height invert:(BOOL)inverted
+- (UIImage*) createMaskImageFromShape:(NSArray*)points withWidth:(CGFloat)width height:(CGFloat)height invert:(BOOL)inverted
 {
     CGContextRef ctx = CGBitmapContextCreate(nil, width, height, 8, 0, CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB), kCGImageAlphaPremultipliedLast);
     
