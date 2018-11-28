@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   # s.license      = { :type => "MIT", :file => "FILE_LICENSE" }
   s.author             = { "Dmitry Kazlouski" => "dkazlouski@wowmaking.net" }
   s.platform     = :ios, "7.0"
-  s.source       = { :git => "https://github.com/wowmaking/react-native-image-tools", :tag => s.version.to_s }
+  s.source       = { :git => "https://github.com/wowmaking/react-native-image-tools", :tag: "v" + s.version.to_s }
   s.source_files  = "ios/**/*.{h,m}"
   s.requires_arc = true
 
