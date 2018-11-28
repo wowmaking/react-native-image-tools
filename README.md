@@ -51,6 +51,8 @@ Not implemented on Android yet.
 #### Parameter(s)
 * **image:** String - path to image
 * **maskImage:** String - path to mask image
+* **options:** Object 
+    * **trimTransparency:** Boolean
 #### Returns Promise of
 * **maskedImage:** Object 
     * **uri:** String
@@ -162,6 +164,29 @@ RNImageTools.createMaskFropShape({
   height: 500,
   inverted: false,
 }).then(({ uri, width, height }) => {
+  // Sync with your app state
+}).catch(console.error);
+```
+
+### merge(images)
+#### Platform support warning
+Not implemented on Android yet.
+#### Parameter(s)
+* **images:** Array 
+    * **uri:** String - path to image
+#### Returns Promise of
+* **mergedImage:** Object 
+    * **uri:** String
+    * **width:** Number
+    * **height:** Number
+```javascript
+RNImageTools.merge(
+    [
+        image1,
+        image2,
+        image3,
+    ]
+).then(({ uri, width, height }) => {
   // Sync with your app state
 }).catch(console.error);
 ```

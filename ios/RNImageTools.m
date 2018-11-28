@@ -85,8 +85,8 @@ RCT_EXPORT_METHOD(mask:(NSString *)imageURLString
     
     resolve(@{
               @"uri": imagePath,
-              @"width": [NSNumber numberWithFloat:maskedImage.size.width],
-              @"height": [NSNumber numberWithFloat:maskedImage.size.height]
+              @"width": [NSNumber numberWithFloat:resultImage.size.width],
+              @"height": [NSNumber numberWithFloat:resultImage.size.height]
               });
 }
 
@@ -106,6 +106,30 @@ RCT_EXPORT_METHOD(resize:(NSString *)imageURLString
               @"uri": imagePath,
               @"width": [NSNumber numberWithFloat:image.size.width],
               @"height": [NSNumber numberWithFloat:image.size.height]
+              });
+}
+
+RCT_EXPORT_METHOD(merge:(NSArray *)imageURLStrings
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejector:(RCTPromiseRejectBlock)reject)
+{
+    NSInteger count = [imageURLStrings count];
+    NSMutableArray *images = [[NSMutableArray alloc] initWithCapacity:count];
+    for (NSInteger i = 0; i < count; i++) {
+        UIImage *image = [self getUIImageFromURLString:imageURLStrings[i]];
+        [images addObject:image];
+    }
+    
+    NSArray *imagesImmutable = [[NSArray alloc] initWithArray:images];
+    
+    UIImage *mergedImage = [self mergeImages:imagesImmutable];
+    
+    NSString *imagePath = [self saveImage:mergedImage withPostfix:@"merged"];
+
+    resolve(@{
+              @"uri": imagePath,
+              @"width": [NSNumber numberWithFloat:mergedImage.size.width],
+              @"height": [NSNumber numberWithFloat:mergedImage.size.height]
               });
 }
 
@@ -372,6 +396,24 @@ RCT_EXPORT_METHOD(createMaskFropShape:(NSDictionary*)options
     return [UIImage imageWithCGImage:cgImage];
 }
 
+- (UIImage*) mergeImages:(NSArray *)images
+{
+    UIImage *firstImage = [images objectAtIndex:0];
+    CGFloat width = firstImage.size.width;
+    CGFloat height = firstImage.size.height;
+    
+    CGContextRef ctx = CGBitmapContextCreate(nil, width, height, CGImageGetBitsPerComponent(firstImage.CGImage), 0, CGImageGetColorSpace(firstImage.CGImage), kCGImageAlphaPremultipliedLast);
+    
+    for (UIImage *image in images) {
+        CGContextDrawImage(ctx, CGRectMake(0, 0, width, height), image.CGImage);
+    }
+    
+    CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
+    CGContextRelease(ctx);
+    
+    return [UIImage imageWithCGImage:cgImage];
+}
+
 - (UIImage*) createMaskImageFropShape:(NSArray*)points withWidth:(CGFloat)width height:(CGFloat)height invert:(BOOL)inverted
 {
     CGContextRef ctx = CGBitmapContextCreate(nil, width, height, 8, 0, CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB), kCGImageAlphaPremultipliedLast);
@@ -382,6 +424,13 @@ RCT_EXPORT_METHOD(createMaskFropShape:(NSDictionary*)options
     for (int i = 0; i < count; i++) {
         cPoints[i] = [[points objectAtIndex:i] CGPointValue];
     }
+    
+    CGAffineTransform transform = CGAffineTransformIdentity;
+    // Flip top to right
+    transform = CGAffineTransformTranslate(transform, 0, height);
+    transform = CGAffineTransformScale(transform, 1, -1);
+    
+    CGContextConcatCTM(ctx, transform);
     
     CGColorRef rectCGColor = inverted ? [UIColor whiteColor].CGColor : [UIColor blackColor].CGColor;
     CGColorRef shapeCGColor = inverted ? [UIColor blackColor].CGColor : [UIColor whiteColor].CGColor;
