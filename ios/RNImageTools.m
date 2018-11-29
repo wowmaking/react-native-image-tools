@@ -3,6 +3,8 @@
 #import "React/RCTLog.h"
 #import "React/RCTConvert.h"
 
+CGFloat layerImageScaleFactor = 1;
+
 @implementation RNImageTools
 
 - (dispatch_queue_t)methodQueue
@@ -74,7 +76,7 @@ RCT_EXPORT_METHOD(mask:(NSString *)imageURLString
     CGFloat newX = (image.size.width - newWidth) / 2;
     CGFloat newY = 0;
     UIImage *croppedImage = [self cropImage:image toRect:CGRectMake(newX, newY, newWidth, newHeight)];
-    
+
     UIImage *maskedImage = [self maskImage:croppedImage withMask:maskImage];
     UIImageView *maskedImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, maskedImage.size.width, maskedImage.size.height)];
     maskedImageView.image = maskedImage;
@@ -225,7 +227,7 @@ RCT_EXPORT_METHOD(createMaskFromShape:(NSDictionary*)options
 
 - (UIImage *)imageFromLayer:(CALayer *)layer
 {
-    UIGraphicsBeginImageContextWithOptions(layer.frame.size, NO, 0);
+    UIGraphicsBeginImageContextWithOptions(layer.frame.size, NO, layerImageScaleFactor);
     
     [layer renderInContext:UIGraphicsGetCurrentContext()];
     UIImage *outputImage = UIGraphicsGetImageFromCurrentImageContext();
@@ -621,7 +623,7 @@ RCT_EXPORT_METHOD(createMaskFromShape:(NSDictionary*)options
         // do not forget to release..
         CGImageRelease(resultNoTransparency);
         CGContextRelease(bitmapContext);
-    
+
     }
     return image;
 }
