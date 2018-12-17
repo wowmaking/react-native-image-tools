@@ -70,12 +70,8 @@ RCT_EXPORT_METHOD(mask:(NSString *)imageURLString
     UIImage *maskImage = [self getUIImageFromURLString:maskImageURLString];
     BOOL trimTransparency = [RCTConvert BOOL:options[@"trimTransparency"]];
     
-    // Crop
-    CGFloat newWidth = maskImage.size.width * image.size.height / maskImage.size.height;
-    CGFloat newHeight = image.size.height;
-    CGFloat newX = (image.size.width - newWidth) / 2;
-    CGFloat newY = 0;
-    UIImage *croppedImage = [self cropImage:image toRect:CGRectMake(newX, newY, newWidth, newHeight)];
+    CGRect cropRect = [self calcRect:maskImage.size forContainedSize:image.size];
+    UIImage *croppedImage = [self cropImage:image toRect:cropRect];
 
     UIImage *maskedImage = [self maskImage:croppedImage withMask:maskImage];
     UIImageView *maskedImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, maskedImage.size.width, maskedImage.size.height)];
@@ -374,23 +370,8 @@ RCT_EXPORT_METHOD(createMaskFromShape:(NSDictionary*)options
 {
     CGContextRef ctx = CGBitmapContextCreate(nil, width, height, CGImageGetBitsPerComponent(image.CGImage), 0, CGImageGetColorSpace(image.CGImage), kCGImageAlphaPremultipliedLast);
     
-    CGFloat rectWidth;
-    CGFloat rectHeight;
-    CGFloat rectX;
-    CGFloat rectY;
-    
-    if (image.size.width > image.size.height) {
-        rectWidth = width;
-        rectHeight = image.size.height * width / image.size.width;
-        rectX = 0;
-        rectY = height / 2 - rectHeight / 2;
-    } else {
-        rectWidth = image.size.width * height / image.size.height;
-        rectHeight = height;
-        rectX = width / 2 - rectWidth / 2;
-        rectY = 0;
-    }
-    CGContextDrawImage(ctx, CGRectMake(rectX, rectY, rectWidth, rectHeight), image.CGImage);
+    CGRect cropRect = [self calcRect:image.size forContainedSize:CGSizeMake(width, height)];;
+    CGContextDrawImage(ctx, cropRect, image.CGImage);
 
     CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
     CGContextRelease(ctx);
@@ -626,6 +607,28 @@ RCT_EXPORT_METHOD(createMaskFromShape:(NSDictionary*)options
 
     }
     return image;
+}
+
+- (CGRect) calcRect:(CGSize)srcSize forContainedSize:(CGSize)dstSize {
+    
+    CGFloat width = 0.0;
+    CGFloat height = 0.0;
+    CGFloat x = 0.0;
+    CGFloat y = 0.0;
+    
+    if (dstSize.width > dstSize.height) {
+        width = srcSize.width * dstSize.height / srcSize.height;
+        height = dstSize.height;
+        x = (dstSize.width - width) / 2;
+        y = 0;
+    } else {
+        width = dstSize.width;
+        height = srcSize.height * dstSize.width / srcSize.width;
+        x = 0;
+        y = (dstSize.height - height) / 2;
+    }
+
+    return CGRectMake(x, y, width, height);
 }
 
 @end
