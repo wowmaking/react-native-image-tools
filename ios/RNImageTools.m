@@ -14,20 +14,15 @@ CGFloat layerImageScaleFactor = 1;
 RCT_EXPORT_MODULE()
 
 RCT_EXPORT_METHOD(transform:(NSString *)imageURLString
-                  translateX:(double)translateX
-                  translateY:(double)translateY
-                  rotate:(double)rotate
-                  scale:(double)scale
+                  translateX:(CGFloat)translateX
+                  translateY:(CGFloat)translateY
+                  rotate:(CGFloat)rotate
+                  scale:(CGFloat)scale
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejector:(RCTPromiseRejectBlock)reject)
 {
     UIImage *image = [self getUIImageFromURLString:imageURLString];
-    UIImage *scaledImage = [self scaleImage:image sx:scale sy:scale];
-    UIImage *rotatedImage = [self rotateImage:scaledImage byDegree:rotate];
-    UIImage *translatedImage = [self translateImage:rotatedImage byX:translateX byY:translateY];
-    UIImage *noTransparencyImage = [self removeTransparencyFromImage:rotatedImage];
-    
-    UIImage *resultImage = noTransparencyImage;
+    UIImage *resultImage = [self transformImage:image translateX:translateX translateY:translateY rotate:rotate scaleX:scale scaleY:scale];
     
     NSString *imagePath = [self saveImage:resultImage withPostfix:@"transformed"];
     
@@ -303,7 +298,12 @@ RCT_EXPORT_METHOD(createMaskFromShape:(NSDictionary*)options
     return [UIImage imageWithCGImage:cgImage];
 }
 
-- (UIImage*) translateImage:(UIImage *) image byX:(double) x byY:(double) y
+- (UIImage*) transformImage:(UIImage *) image
+                 translateX:(CGFloat)x
+                 translateY:(CGFloat)y
+                     rotate:(CGFloat)degree
+                     scaleX:(CGFloat)sx
+                     scaleY:(CGFloat)sy
 {
     CGContextRef ctx = CGBitmapContextCreate(nil, image.size.width, image.size.height, CGImageGetBitsPerComponent(image.CGImage), 0, CGImageGetColorSpace(image.CGImage), kCGImageAlphaPremultipliedLast);
     
@@ -311,40 +311,16 @@ RCT_EXPORT_METHOD(createMaskFromShape:(NSDictionary*)options
     CGContextFillRect(ctx, CGRectMake(0, 0, image.size.width, image.size.height));
     
     CGAffineTransform transform = CGAffineTransformIdentity;
+    
+    // Translate
     transform = CGAffineTransformTranslate(transform, x, -y);
     
-    CGContextConcatCTM(ctx, transform);
-    CGContextDrawImage(ctx, CGRectMake(0, 0, image.size.width, image.size.height), image.CGImage);
-    
-    CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
-    CGContextRelease(ctx);
-    
-    return [UIImage imageWithCGImage:cgImage];
-}
-
-- (UIImage*) rotateImage:(UIImage *) image byDegree:(double) degree
-{
-    CGContextRef ctx = CGBitmapContextCreate(nil, image.size.width, image.size.height, CGImageGetBitsPerComponent(image.CGImage), 0, CGImageGetColorSpace(image.CGImage), kCGImageAlphaPremultipliedLast);
-    
-    CGAffineTransform transform = CGAffineTransformIdentity;
+    // Rotate
     transform = CGAffineTransformTranslate(transform, image.size.width / 2, image.size.height / 2);
     transform = CGAffineTransformRotate(transform, -M_PI / 180 * degree);
     transform = CGAffineTransformTranslate(transform, -image.size.width / 2, -image.size.height / 2);
     
-    CGContextConcatCTM(ctx, transform);
-    CGContextDrawImage(ctx, CGRectMake(0, 0, image.size.width, image.size.height), image.CGImage);
-    
-    CGImageRef cgImage = CGBitmapContextCreateImage(ctx);
-    CGContextRelease(ctx);
-    
-    return [UIImage imageWithCGImage:cgImage];
-}
-
-- (UIImage*) scaleImage:(UIImage *)image sx:(CGFloat)sx sy:(CGFloat) sy
-{
-    CGContextRef ctx = CGBitmapContextCreate(nil, image.size.width, image.size.height, CGImageGetBitsPerComponent(image.CGImage), 0, CGImageGetColorSpace(image.CGImage), kCGImageAlphaPremultipliedLast);
-    
-    CGAffineTransform transform = CGAffineTransformIdentity;
+    // Scale
     transform = CGAffineTransformTranslate(transform, -image.size.width * (sx - 1) / 2, -image.size.height * (sy - 1) / 2);
     transform = CGAffineTransformScale(transform, sx, sy);
     
