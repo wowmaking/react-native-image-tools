@@ -22,9 +22,9 @@ RCT_EXPORT_METHOD(transform:(NSString *)imageURLString
                   rejector:(RCTPromiseRejectBlock)reject)
 {
     UIImage *image = [self getUIImageFromURLString:imageURLString];
-    UIImage *translatedImage = [self translateImage:image byX:translateX byY:translateY];
-    UIImage *scaledImage = [self scaleImage:translatedImage sx:scale sy:scale];
+    UIImage *scaledImage = [self scaleImage:image sx:scale sy:scale];
     UIImage *rotatedImage = [self rotateImage:scaledImage byDegree:rotate];
+    UIImage *translatedImage = [self translateImage:rotatedImage byX:translateX byY:translateY];
     UIImage *noTransparencyImage = [self removeTransparencyFromImage:rotatedImage];
     
     UIImage *resultImage = noTransparencyImage;
@@ -315,7 +315,7 @@ RCT_EXPORT_METHOD(createMaskFromShape:(NSDictionary*)options
     CGContextFillRect(ctx, CGRectMake(0, 0, image.size.width, image.size.height));
     
     CGAffineTransform transform = CGAffineTransformIdentity;
-    transform = CGAffineTransformTranslate(transform, x, y);
+    transform = CGAffineTransformTranslate(transform, x, -y);
     
     CGContextConcatCTM(ctx, transform);
     CGContextDrawImage(ctx, CGRectMake(0, 0, image.size.width, image.size.height), image.CGImage);
@@ -332,7 +332,7 @@ RCT_EXPORT_METHOD(createMaskFromShape:(NSDictionary*)options
     
     CGAffineTransform transform = CGAffineTransformIdentity;
     transform = CGAffineTransformTranslate(transform, image.size.width / 2, image.size.height / 2);
-    transform = CGAffineTransformRotate(transform, M_PI / 180 * degree);
+    transform = CGAffineTransformRotate(transform, -M_PI / 180 * degree);
     transform = CGAffineTransformTranslate(transform, -image.size.width / 2, -image.size.height / 2);
     
     CGContextConcatCTM(ctx, transform);

@@ -1,4 +1,5 @@
 # react-native-image-tools-wm
+A collection of image processing tools for React Native
 
 ## Getting started
 
@@ -35,7 +36,7 @@
    ```
 3. Insert the following lines inside the dependencies block in `android/app/build.gradle`:
    ```
-     compile project(':react-native-image-tools-wm')
+     implementation project(':react-native-image-tools-wm')
    ```
 ## Usage
 
@@ -46,8 +47,6 @@ See examples in the API section.
 
 ## API
 ### mask(image, maskImage)
-#### Platform support warning
-Not implemented on Android yet.
 #### Parameter(s)
 * **image:** String - path to image
 * **maskImage:** String - path to mask image
@@ -68,8 +67,6 @@ RNImageTools.mask(image, maskImage, {
 
 
 ### transform(image, translateX, translateY, scale, rotate)
-#### Platform support warning
-Not implemented on Android yet.
 #### Parameter(s)
 * **image:** String - path to image
 * **translateX:** Number
@@ -91,8 +88,6 @@ RNImageTools.transform(image, 10, -10, 1.25, 45)
 
 
 ### resize(image, width, height)
-#### Platform support warning
-Not implemented on Android yet.
 #### Parameter(s)
 * **image:** String - path to image
 * **width:** Number
@@ -112,8 +107,6 @@ RNImageTools.resize(image, 500, 500)
 
 
 ### crop(image, x, y, width, height)
-#### Platform support warning
-Not implemented on Android yet.
 #### Parameter(s)
 * **image:** String - path to image
 * **x:** Number - top offset
@@ -136,8 +129,6 @@ RNImageTools.crop(image, 100, 100, 500, 500)
 
 ### createMaskFromShape(options)
 Creates a bitmap with white background and draws a black shape from provided points. It's intended usage is to generate mask images on the fly.
-#### Platform support warning
-Not implemented on Android yet.
 #### Parameter(s)
 * **options:** Object 
     * **points:** Array of points
@@ -169,8 +160,6 @@ RNImageTools.createMaskFromShape({
 ```
 
 ### merge(images)
-#### Platform support warning
-Not implemented on Android yet.
 #### Parameter(s)
 * **images:** Array 
     * **uri:** String - path to image
