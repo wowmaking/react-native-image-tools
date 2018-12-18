@@ -1,25 +1,38 @@
 package net.wowmaking;
 
+import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
+import android.support.media.ExifInterface;
+import android.net.Uri;
+import android.os.Build;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
-import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableMap;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.UUID;
+import org.apache.commons.io.IOUtils;
 
 final class Utility {
-    static WritableMap buildImageReactMap (File file, Bitmap bmp) {
+
+    private static final String SCHEME_FILE = "file";
+    private static final String SCHEME_CONTENT = "content";
+
+    static WritableMap buildImageReactMap(File file, Bitmap bmp) {
         WritableMap map = Arguments.createMap();
         map.putString("uri", "file://" + file.toString());
         map.putDouble("width", bmp.getWidth());
@@ -27,12 +40,44 @@ final class Utility {
         return map;
     }
 
-    static Bitmap bitmapFromUriString (String uriString, final Promise promise) {
+    static Bitmap bitmapFromUriString(String uriString, final Promise promise, Context context) {
         try {
+            Uri uri = Uri.parse(uriString);
+            String scheme = Uri.parse(uriString).getScheme();
+            if (scheme.equals(SCHEME_CONTENT) || scheme.equals(SCHEME_FILE)) {
+                ContentResolver resolver = context.getContentResolver();
+                try {
+                    InputStream streamOrient = resolver.openInputStream(uri);
+                    final int orientation = Utility.getOrientation(streamOrient);
+
+                    InputStream streamBmp = resolver.openInputStream(uri);
+                    Bitmap bmp = BitmapFactory.decodeStream(streamBmp);
+
+                    return Utility.fixOrientation(bmp, orientation);
+
+                } catch (FileNotFoundException e) {
+                    handleError(e, promise);
+                }
+            }
+
             URL url = new URL(uriString);
             try {
-                Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-                return bmp;
+                URLConnection connection = url.openConnection();
+                InputStream inputStream = connection.getInputStream();
+
+                File tempFile = new File(context.getFilesDir(), UUID.randomUUID().toString() + ".tmp");
+
+                final FileOutputStream outputStream = new FileOutputStream(tempFile);
+
+                IOUtils.copy(inputStream, outputStream);
+
+                final int orientation = Utility.getOrientation(tempFile.getAbsolutePath());
+
+                Bitmap bmp = BitmapFactory.decodeFile(tempFile.getAbsolutePath());
+
+                tempFile.delete();
+
+                return Utility.fixOrientation(bmp, orientation);
             } catch (IOException e) {
                 handleError(e, promise);
             }
@@ -47,14 +92,13 @@ final class Utility {
         promise.reject(e);
     }
 
-    static File createRandomPNGFile (ReactContext context) {
+    static File createRandomPNGFile(ReactContext context) {
         String filename = UUID.randomUUID().toString() + ".png";
         return new File(context.getFilesDir(), filename);
     }
 
 
-
-    static void writeBMPToPNGFile (Bitmap bmp, File file, Promise promise) {
+    static void writeBMPToPNGFile(Bitmap bmp, File file, Promise promise) {
         try {
             FileOutputStream out = new FileOutputStream(file);
             bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
@@ -135,5 +179,82 @@ final class Utility {
         map.put("y", y);
 
         return map;
+    }
+
+    static int getOrientation(String filename) {
+        ExifInterface exif = null;
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                exif = new ExifInterface(filename);
+            }
+            return exif.getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_UNDEFINED
+            );
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            return -1;
+        }
+    }
+
+
+
+    static int getOrientation(InputStream stream) {
+        ExifInterface exif = null;
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                exif = new ExifInterface(stream);
+            }
+            return exif.getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_UNDEFINED
+            );
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            return -1;
+        }
+    }
+
+    static Bitmap fixOrientation(Bitmap bitmap, int orientation) {
+        Matrix matrix = new Matrix();
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_NORMAL:
+                return bitmap;
+            case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                matrix.setScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                matrix.setRotate(180);
+                break;
+            case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                matrix.setRotate(180);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_TRANSPOSE:
+                matrix.setRotate(90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                matrix.setRotate(90);
+                break;
+            case ExifInterface.ORIENTATION_TRANSVERSE:
+                matrix.setRotate(-90);
+                matrix.postScale(-1, 1);
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                matrix.setRotate(-90);
+                break;
+            default:
+                return bitmap;
+        }
+        try {
+            Bitmap bmRotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            bitmap.recycle();
+            return bmRotated;
+        }
+        catch (OutOfMemoryError e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

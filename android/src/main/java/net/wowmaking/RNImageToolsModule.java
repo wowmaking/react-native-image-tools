@@ -33,7 +33,7 @@ public class RNImageToolsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void resize(String uriString, int width, int height, final Promise promise) {
-        Bitmap bmp = Utility.bitmapFromUriString(uriString, promise);
+        Bitmap bmp = Utility.bitmapFromUriString(uriString, promise, reactContext);
         if (bmp == null) {
             return;
         }
@@ -64,7 +64,7 @@ public class RNImageToolsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void crop(String uriString, int x, int y, int width, int height, final Promise promise) {
-        Bitmap bmp = Utility.bitmapFromUriString(uriString, promise);
+        Bitmap bmp = Utility.bitmapFromUriString(uriString, promise, reactContext);
         if (bmp == null) {
             return;
         }
@@ -79,7 +79,7 @@ public class RNImageToolsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void transform(String uriString, float translateX, float translateY, float rotate, float scale, final Promise promise) {
-        Bitmap bmp = Utility.bitmapFromUriString(uriString, promise);
+        Bitmap bmp = Utility.bitmapFromUriString(uriString, promise, reactContext);
         if (bmp == null) {
             return;
         }
@@ -106,7 +106,7 @@ public class RNImageToolsModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void merge(ReadableArray uriStrings, Promise promise) {
-        Bitmap firstBmp = Utility.bitmapFromUriString(uriStrings.getString(0), promise);
+        Bitmap firstBmp = Utility.bitmapFromUriString(uriStrings.getString(0), promise, reactContext);
         if (firstBmp == null) {
             return;
         }
@@ -115,7 +115,7 @@ public class RNImageToolsModule extends ReactContextBaseJavaModule {
         canvas.drawBitmap(firstBmp, new Matrix(), null);
 
         for (int i = 1; i < uriStrings.size(); i++) {
-            Bitmap bmp = Utility.bitmapFromUriString(uriStrings.getString(i), promise);
+            Bitmap bmp = Utility.bitmapFromUriString(uriStrings.getString(i), promise, reactContext);
             if (bmp == null) {
                 return;
             }
@@ -192,12 +192,12 @@ public class RNImageToolsModule extends ReactContextBaseJavaModule {
 
         final boolean trimTransparency = options.getBoolean("trimTransparency");
 
-        Bitmap bmp = Utility.bitmapFromUriString(uriString, promise);
+        Bitmap bmp = Utility.bitmapFromUriString(uriString, promise, reactContext);
         if (bmp == null) {
             return;
         }
 
-        Bitmap maskBmp = Utility.bitmapFromUriString(maskUriString, promise);
+        Bitmap maskBmp = Utility.bitmapFromUriString(maskUriString, promise, reactContext);
         if (maskBmp == null) {
             return;
         }
