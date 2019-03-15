@@ -138,22 +138,25 @@ public class RNImageToolsModule extends ReactContextBaseJavaModule {
         final int height = options.getInt("height");
         final boolean inverted = options.getBoolean("inverted");
 
-        final int bgColor = inverted ? Color.BLACK : Color.WHITE;
-        final int shapeColor = inverted ? Color.WHITE : Color.BLACK;
+        final Paint bgPaint = new Paint();
+        final Paint shapePaint = new Paint();
+
+        if (inverted) {
+            bgPaint.setColor(Color.BLACK);
+            bgPaint.setAlpha(0);
+            shapePaint.setColor(Color.WHITE);
+        } else {
+            bgPaint.setColor(Color.WHITE);
+            shapePaint.setColor(Color.BLACK);
+            shapePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+        }
 
         Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bmp);
 
         final Rect bgRect = new Rect(0, 0, width, height);
-        final Paint bgPaint = new Paint();
-        bgPaint.setColor(bgColor);
-        if (bgColor == Color.BLACK) {
-            bgPaint.setAlpha(0);
-        }
-
 
         canvas.drawRect(bgRect, bgPaint);
-
 
         final Path shapePath = new Path();
 
@@ -171,14 +174,7 @@ public class RNImageToolsModule extends ReactContextBaseJavaModule {
             }
         }
 
-        final Paint shapePaint = new Paint();
-        shapePaint.setColor(shapeColor);
-        if (shapeColor == Color.BLACK) {
-            shapePaint.setAlpha(0);
-        }
-
         canvas.drawPath(shapePath, shapePaint);
-
 
         File file = Utility.createRandomPNGFile(reactContext);
         Utility.writeBMPToPNGFile(bmp, file, promise);
