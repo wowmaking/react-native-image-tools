@@ -14,6 +14,7 @@ import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.views.imagehelper.ResourceDrawableIdHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,7 +45,7 @@ final class Utility {
         try {
             Uri uri = Uri.parse(uriString);
             String scheme = Uri.parse(uriString).getScheme();
-            if (scheme.equals(SCHEME_CONTENT) || scheme.equals(SCHEME_FILE)) {
+            if (scheme != null && (scheme.equals(SCHEME_CONTENT) || scheme.equals(SCHEME_FILE))) {
                 ContentResolver resolver = context.getContentResolver();
                 try {
                     InputStream streamOrient = resolver.openInputStream(uri);
@@ -57,6 +58,11 @@ final class Utility {
 
                 } catch (FileNotFoundException e) {
                     handleError(e, promise);
+                }
+            } else {
+                int id = ResourceDrawableIdHelper.getInstance().getResourceDrawableId(context, uriString);
+                if (id > 0) {
+                    return BitmapFactory.decodeResource(context.getResources(), id);
                 }
             }
 
