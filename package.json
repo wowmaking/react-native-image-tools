@@ -1,6 +1,6 @@
 {
   "name": "react-native-image-tools-wm",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "A collection of image processing tools for React Native",
   "main": "index.js",
   "scripts": {
