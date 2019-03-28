@@ -188,17 +188,17 @@ final class Utility {
     }
 
     static int getOrientation(String filename) {
-        ExifInterface exif = null;
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                exif = new ExifInterface(filename);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                return new ExifInterface(filename).getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_UNDEFINED
+                );
+            } catch (IOException e) {
+                e.printStackTrace(System.err);
+                return -1;
             }
-            return exif.getAttributeInt(
-                    ExifInterface.TAG_ORIENTATION,
-                    ExifInterface.ORIENTATION_UNDEFINED
-            );
-        } catch (IOException e) {
-            e.printStackTrace(System.err);
+        } else {
             return -1;
         }
     }
@@ -206,17 +206,17 @@ final class Utility {
 
 
     static int getOrientation(InputStream stream) {
-        ExifInterface exif = null;
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                exif = new ExifInterface(stream);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                return new ExifInterface(stream).getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_UNDEFINED
+                );
+            } catch (IOException e) {
+                e.printStackTrace(System.err);
+                return -1;
             }
-            return exif.getAttributeInt(
-                    ExifInterface.TAG_ORIENTATION,
-                    ExifInterface.ORIENTATION_UNDEFINED
-            );
-        } catch (IOException e) {
-            e.printStackTrace(System.err);
+        } else {
             return -1;
         }
     }
