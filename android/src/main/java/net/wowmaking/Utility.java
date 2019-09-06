@@ -98,16 +98,16 @@ final class Utility {
         promise.reject(e);
     }
 
-    static File createRandomPNGFile(ReactContext context) {
-        String filename = UUID.randomUUID().toString() + ".png";
+    static File createRandomJPEGFile(ReactContext context) {
+        String filename = UUID.randomUUID().toString() + ".jpg";
         return new File(context.getFilesDir(), filename);
     }
 
 
-    static void writeBMPToPNGFile(Bitmap bmp, File file, Promise promise) {
+    static void writeBMPToJPEGFile(Bitmap bmp, File file, Promise promise) {
         try {
             FileOutputStream out = new FileOutputStream(file);
-            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+            bmp.compress(Bitmap.CompressFormat.JPEG, 60, out);
             out.close();
         } catch (IOException e) {
             handleError(e, promise);

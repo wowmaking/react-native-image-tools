@@ -193,8 +193,8 @@ RCT_EXPORT_METHOD(createMaskFromShape:(NSDictionary*)options
 
 - (NSString *)saveImage:(UIImage *)image withPostfix:(NSString *)postfix {
     NSString *fileName = [[NSProcessInfo processInfo] globallyUniqueString];
-    NSString *fullPath = [NSString stringWithFormat:@"%@/%@_%@.png", [self getPathForDirectory:NSDocumentDirectory], fileName, postfix];
-    NSData *imageData = UIImagePNGRepresentation(image);
+    NSString *fullPath = [NSString stringWithFormat:@"%@/%@_%@.jpg", [self getPathForDirectory:NSDocumentDirectory], fileName, postfix];
+    NSData *imageData = UIImageJPEGRepresentation(image, 0.6);
     [imageData writeToFile:fullPath atomically:YES];
     return fullPath;
 }
