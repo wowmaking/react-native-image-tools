@@ -26,5 +26,4 @@ repositories {
 dependencies {
     implementation 'com.facebook.react:react-native:+'
     implementation "com.android.support:exifinterface:${safeExtGet('supportLibVersion', '27.1.0')}"
-    implementation group: 'org.apache.directory.studio', name: 'org.apache.commons.io', version: '2.4'
 }
