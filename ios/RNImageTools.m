@@ -9,7 +9,7 @@ CGFloat layerImageScaleFactor = 1;
 
 - (dispatch_queue_t)methodQueue
 {
-    return dispatch_get_main_queue();
+    return dispatch_queue_create("co.deering.DeerAppRenew.ImageTools", DISPATCH_QUEUE_SERIAL);
 }
 RCT_EXPORT_MODULE()
 
