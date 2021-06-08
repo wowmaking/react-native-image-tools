@@ -1,6 +1,0 @@
-rootProject.name = 'ExampleApp'
-
-include ':react-native-image-tools-wm'
-project(':react-native-image-tools-wm').projectDir = new File(rootProject.projectDir, 	'../../android')
-
-include ':app'
